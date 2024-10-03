@@ -1,0 +1,2 @@
+2024-10-04 01:14:46,756 - asyncio - DEBUG - Using selector: EpollSelector
+2024-10-04 01:14:47,287 - parser.parser - INFO - Получили последнюю страницу

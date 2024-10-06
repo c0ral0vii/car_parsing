@@ -7,7 +7,7 @@ logger = get_logger(__name__)
 
 
 async def start():
-    await parser.parse_counts()
+    await parser.main()
 
 
 asyncio.run(start())

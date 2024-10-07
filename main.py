@@ -1,13 +1,16 @@
 import asyncio
-from config.logger_config import get_logger
-from parser import parser
+from func.create import create
+from parser.parser import main
 
 
-logger = get_logger(__name__)
 
 
 async def start():
-    await parser.main()
+    await create()
+    
+    await main()
+    
 
-
-asyncio.run(start())
+if __name__ == '__main__':
+    print('Старт')
+    asyncio.run(start())

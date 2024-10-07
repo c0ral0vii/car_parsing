@@ -3,3 +3,4 @@ venv
 .vscode
 .idea
 app.log
+cars.xlsx

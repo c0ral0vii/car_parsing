@@ -3,6 +3,4 @@ requests
 pydantic
 pydantic_settings
 lxml
-aiocsv
-openpyxl
 loguru

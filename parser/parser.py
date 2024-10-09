@@ -1,6 +1,6 @@
 from config.config import settings
 from bs4 import BeautifulSoup
-from func.update import update_excel
+from func.update import update_csv
 import aiohttp
 import asyncio
 
@@ -89,11 +89,12 @@ async def parse_page(link: str):
                 if response.status == 200:
                     html = await response.text()
             except Exception as e:
-                print(e)
+                print(link,f'- Ошибка с машиной {e}')
+
 
     soup = BeautifulSoup(html, 'lxml')
 
-    configurate = {} # собираем  в одну конфигурацию машины
+    # configurate = {} # собираем  в одну конфигурацию машины
 
     name = soup.find('h1', class_='mb-5 mt-4').get_text()
     id = soup.find('div', class_='text-secondary h5 negative-mt-4').get_text()
@@ -111,25 +112,12 @@ async def parse_page(link: str):
         if not item.get('class'):
             ready_config.append(item.get_text())
     
-    configurate.update({
-        # 'title': name,
-        # 'guid': id.split(' ')[-1],
-        # 'URL': link,
-        # 'price': price.encode('utf-8'),
-        # 'images_link': [image_link.get('src') for image_link in image_links],
-        # 'configurate': ready_config[0],
-        # 'date': ready_config[3],
-        # 'engine': ready_config[1],
-        # 'transmission': ready_config[2],
-        # 'probeg': ready_config[4],
-        # 'issue': ready_config[5],
-        # 'taxt': f'{brand_option}>{' '.join(name.split(',')[0].split(' ')[1:])}>{ready_config[0]}',
-        'excel_format': [
+    data = [
             name, 
             id.split(' ')[-1],
             link,
             price.encode('utf-8'),
-            [image_link.get('src') for image_link in image_links][0],
+            ','.join([image_link.get('src') for image_link in image_links]),
             ready_config[0],
             ready_config[3],
             ready_config[1],
@@ -138,8 +126,24 @@ async def parse_page(link: str):
             ready_config[5],
             f'{brand_option}>{' '.join(name.split(',')[0].split(' ')[1:])}>{ready_config[0]}'
             ]
-    })
-    asyncio.create_task(update_excel(data=configurate.get('excel_format')))
+    
+    asyncio.create_task(update_csv(data=data))
+
+    # Если понадобиться взять что то и перенести
+    # configurate.update({
+    #     # 'title': name, - имф
+    #     # 'guid': id.split(' ')[-1], - айди
+    #     # 'URL': link, - ссылка
+    #     # 'price': price.encode('utf-8'),
+    #     # 'images_link': [image_link.get('src') for image_link in image_links], - изображения
+    #     # 'configurate': ready_config[0], - конфигурация
+    #     # 'date': ready_config[3], - дата публикации
+    #     # 'engine': ready_config[1], - двигатель
+    #     # 'transmission': ready_config[2], - трансмиссия
+    #     # 'probeg': ready_config[4], - пробег
+    #     # 'issue': ready_config[5], - подробности
+    #     # 'taxt': f'{brand_option}>{' '.join(name.split(',')[0].split(' ')[1:])}>{ready_config[0]}', - taxt
+    # })
 
 
 async def main():

@@ -1,17 +1,15 @@
-from openpyxl import Workbook
 from config.config import settings
+import csv
+import aiofiles
+import datetime
 
 
 async def create():
     '''
-    Создание excel файла
+    Создание csv-файла
     '''
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Cars"
-    ws.append(
-        ['title',
+    data = datetime.datetime.now().strftime('%Y-%m-%d')
+    base_info = ['title',
         'guid',
         'URL',
         'price',
@@ -22,9 +20,9 @@ async def create():
         'transmission',
         'probeg',
         'issue',
-        'taxt']
-        )
-    wb.save(f'output/{settings.BASE_NAME}')
-    return wb
+        'taxt'] # структура файла
 
+    async with aiofiles.open(f'./output/parse.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        await writer.writerow(base_info)
         

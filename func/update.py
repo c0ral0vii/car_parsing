@@ -1,13 +1,12 @@
-from openpyxl import load_workbook
+import csv
+import aiofiles
 
 
-async def update_excel(data: list):
+async def update_csv(data: list):
     '''
-    Дополнение excel-файла
+    Дополнение csv-файла
     '''
 
-    wb = load_workbook(filename='output/cars.xlsx', data_only=True)
-    ws = wb.active
-
-    ws.append(data)
-    wb.save('output/cars.xlsx')
+    async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8') as file: 
+        writer = csv.writer(file)
+        await writer.writerow(data)

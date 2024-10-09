@@ -6,41 +6,39 @@ import asyncio
 
 
 
-async def get_all_cars(count: str = 1):
+async def get_all_cars(session, count: str = 1):
     '''
     Парсинг страницы машин
     '''
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'{settings.BASE_URL}/{count}') as response:
-            try:
-                if response.status == 200:
-                    return await response.text()
-            except Exception as e:
-                print(e)
+    async with session.get(f'{settings.BASE_URL}/{count}') as response:
+        try:
+            if response.status == 200:
+                return await response.text()
+        except Exception as e:
+            print(e)
 
 
-async def get_page_counts():
+async def get_page_counts(session):
     '''
     Получение последней страницы
     '''
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'{settings.BASE_URL}/10000') as response:
-            try:
-                if response.status == 200:
-                    return await response.text()
-            except Exception as e:
-                print(e)
+    async with session.get(f'{settings.BASE_URL}/10000') as response:
+        try:
+            if response.status == 200:
+                return await response.text()
+        except Exception as e:
+            print(e)
 
 
-async def parse_counts() -> list:
+async def parse_counts(session) -> list:
     '''
     Получение количества страниц
     '''
 
     try:
-        html = await get_page_counts()
+        html = await get_page_counts(session=session)
 
         soup = BeautifulSoup(html, 'lxml')
 
@@ -57,7 +55,7 @@ async def parse_counts() -> list:
         print(e)
 
 
-async def parse_link_cars(counts: list):
+async def parse_link_cars(counts: list, session):
     '''
     Получаем ссылки на машины
     '''
@@ -66,7 +64,7 @@ async def parse_link_cars(counts: list):
     
     for i in counts:
         all_links = []
-        html = await get_all_cars(count=i)
+        html = await get_all_cars(session=session, count=i)
 
         soup = BeautifulSoup(html, 'lxml')
         
@@ -78,18 +76,17 @@ async def parse_link_cars(counts: list):
         yield all_links
 
 
-async def parse_page(link: str):
+async def parse_page(link: str, session):
     '''
     Получение страницы с машиной
     '''
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'{link}') as response:
-            try:
-                if response.status == 200:
-                    html = await response.text()
-            except Exception as e:
-                print(link,f'- Ошибка с машиной {e}')
+    async with session.get(f'{link}') as response:
+        try:
+            if response.status == 200:
+                html = await response.text()
+        except Exception as e:
+            print(link,f'- Ошибка с машиной {e}')
 
 
     soup = BeautifulSoup(html, 'lxml')
@@ -151,8 +148,9 @@ async def main():
     Основная функция
     '''
 
-    count_pages = await parse_counts()
+    async with aiohttp.ClientSession() as session:
+        count_pages = await parse_counts(session=session)
 
-    async for all_links in parse_link_cars(counts=count_pages):
-        for link in all_links:
-            asyncio.create_task(parse_page(link=link))
+        async for all_links in parse_link_cars(session=session, counts=count_pages):
+            for link in all_links:
+                asyncio.create_task(parse_page(link=link, session=session))

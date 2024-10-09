@@ -4,3 +4,4 @@ pydantic
 pydantic_settings
 lxml
 loguru
+aiofiles

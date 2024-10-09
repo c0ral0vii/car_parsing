@@ -4,3 +4,4 @@ venv
 .idea
 app.log
 cars.xlsx
+__pycache__

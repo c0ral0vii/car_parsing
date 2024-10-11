@@ -18,8 +18,11 @@ async def get_all_cars(session, count: str = 1):
         try:
             if response.status == 200:
                 return await response.text()
+            else:
+                logger.error('Ошибка при получении машин')
+                return
         except Exception as e:
-            print(e)
+            logger.exception(f'Ошибка {e} при парсинге страницы с машинами')
 
 
 async def get_page_counts(session):
@@ -31,8 +34,11 @@ async def get_page_counts(session):
         try:
             if response.status == 200:
                 return await response.text()
+            else:
+                logger.error('Ошибка при получении машин')
+                return
         except Exception as e:
-            print(e)
+            logger.exception(f'Ошибка {e} при парсинге страницы с машинами')
 
 
 async def parse_counts(session) -> list:
@@ -58,23 +64,30 @@ async def parse_counts(session) -> list:
         print(e)
 
 
-async def parse_link_cars(counts: list, session):
+async def parse_link_cars(session):
     '''
     Получаем ссылки на машины
     '''
 
-    for i in counts:
-        all_links = []
-        html = await get_all_cars(session=session, count=i)
+    logger.info('Получаем ссылки на машины')
+    all_links = []
+    all_pages = await parse_counts(session=session)
 
-        soup = BeautifulSoup(html, 'lxml')
-        
-        links = soup.find_all('a', class_='btn btn-outline-primary')
+    for i in all_pages:
+        try:
+            html = await get_all_cars(session=session, count=i)
 
-        for link in links:
-            all_links.append(f'{settings.BASE_URL}/{link.get('href')}')
-
-        yield all_links
+            soup = BeautifulSoup(html, 'lxml')
+            
+            links = soup.find_all('a', class_='btn btn-outline-primary')
+            for link in links:
+                all_links.append(f'{settings.BASE_URL}/{link.get('href')}')
+                logger.info(f'Ссылка получена {settings.BASE_URL}{link.get('href')}')
+        except Exception as e:
+            logger.error(f'Возникла ошибка {e} при получении ссылок на машины')
+            continue
+    logger.info(f'Получено ссылок на машины - {len(all_links)}')
+    return all_links
 
 
 async def parse_page(link: str, session):
@@ -141,17 +154,15 @@ async def parse_page(link: str, session):
         return
     
 
-async def main():
+async def main(pages: list):
     '''
     Основная функция
     '''
 
     logger.info('Запуск основной функции')
     async with aiohttp.ClientSession() as session: # TODO получить количество в main функции
-        count_pages = await parse_counts(session=session)
         logger.info('Получили колличество страниц')
 
-        async for all_links in parse_link_cars(session=session, counts=count_pages):
-            for link in all_links:
-                data = await parse_page(link=link, session=session)
-                await update_csv(data=data)
+        for link in pages:
+            data = await parse_page(link=link, session=session)
+            await update_csv(data=data)

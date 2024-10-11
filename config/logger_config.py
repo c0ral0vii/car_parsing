@@ -8,6 +8,6 @@ async def setup_async_logger():
 
     logger.remove()
 
-    logger.add('debug.log', level='DEBUG', colorize=True, rotation='100 MB', compression='zip', format='{time} | {level} | {message}', mode='w')
+    logger.add('debug.log', level='INFO', colorize=True, rotation='100 MB', compression='zip', format='{time} | {level} | {message}', mode='w')
 
     return logger

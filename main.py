@@ -249,6 +249,8 @@ async def main(pages: list):
 
 
 async def start(processes: int = 1):
+    print('Смотрите файл логов debug.log')
+
     logger.info('Запуск программы')
     logger.info(f'Запуск в {processes}')
     try:
@@ -264,16 +266,9 @@ async def start(processes: int = 1):
         get_tasks = [parse_link_cars(session=session, pages=page_row) for page_row in links_part]
         logger.info('Получаем ссылки на машины')
         all_cars = await asyncio.gather(*get_tasks)
-        print(all_cars)
-        all_links = [links async for links in parse_link_cars(session=session)]
 
-        links_part = np.array_split(all_links, processes)
-
-    print('Смотрите файл логов debug.log')
-
-    tasks = [main(pages=links) for links in links_part]
-    results = await asyncio.gather(*tasks)
-    print(results)
+    tasks = [main(pages=links) for links in all_cars]
+    await asyncio.gather(*tasks)
     logger.info('Создали файл')
 
     logger.info('Парсинг закончился')

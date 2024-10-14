@@ -5,3 +5,5 @@ venv
 app.log
 cars.xlsx
 __pycache__
+output
+parse.csv

@@ -56,9 +56,10 @@ async def update_csv(data: list):
     '''
     Дополнение csv-файла
     '''
-    if len(data) != 11:
-        return
+    
     try:
+        if len(data) != 11:
+            return
         async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
             writer = csv.writer(file)
             await writer.writerow(data)

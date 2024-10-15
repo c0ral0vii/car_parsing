@@ -38,24 +38,25 @@ async def send():
     '''
     Отправка на сервер
     '''
+    try:
+        logger.info('Отправка файла на сервер')
+        ftp = ftplib.FTP("46.254.17.27")
+        ftp.login("ftp_pars", "n8N5ipG26J")
+        localfile = f'./output/parse.csv'
+        remotefile = 'pars_by.csv'
+        with open(localfile, "rb") as file:
+            ftp.storbinary('STOR ' + remotefile, file)
 
-    logger.info('Отправка файла на сервер')
-    ftp = ftplib.FTP("46.254.17.27")
-    ftp.login("ftp_pars", "n8N5ipG26J")
-    localfile = f'./output/parse.csv'
-    remotefile = 'pars_by.csv'
-    with open(localfile, "rb") as file:
-        ftp.storbinary('STOR ' + remotefile, file)
-
-    ftp.quit()
-    logger.info('Отправка завершена')
-
+        ftp.quit()
+        logger.info('Отправка завершена')
+    except Exception as e:
+        logger.error(f'Ошибка при отправке {e}')
 
 async def update_csv(data: list):
     '''
     Дополнение csv-файла
     '''
-    if len(data) != 8:
+    if len(data) != 11:
         return
     try:
         async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
@@ -161,7 +162,8 @@ async def parse_link_cars(session, pages: list = []) -> list:
         try:
 
             html = await get_all_cars(session=session, count=i)
-
+            if not html:
+                continue
             soup = BeautifulSoup(html, 'lxml')
             
             links = soup.find_all('a', class_='btn btn-outline-primary')
@@ -195,14 +197,13 @@ async def parse_page(link: str, session):
         logger.exception(f'Ошибка с машиной: {link}, проблема получения html страницы')
         return
 
-    # configurate = {} # собираем  в одну конфигурацию машины
     try:
         name = soup.find('h1', class_='mb-5 mt-4').get_text()
         id = soup.find('div', class_='text-secondary h5 negative-mt-4').get_text()
         price_element = soup.find('span', itemprop='price')
 
         if price_element:
-            price = price_element.get_text(strip=True)
+            price = price_element.get_text(strip=True).encode('utf-8').decode('utf-8')
         else:
             price = 'Отсутствует, только связь с менеджером'
 
@@ -222,7 +223,7 @@ async def parse_page(link: str, session):
                 name, 
                 id.split(' ')[-1],
                 link,
-                price.encode('utf-8'),
+                price,
                 ','.join([image_link.get('src').replace('impolicy=heightRate&rh=653&cw=1160&ch=653&cg=Center', '') for image_link in image_links]),
                 ready_config[0],
                 ready_config[1],

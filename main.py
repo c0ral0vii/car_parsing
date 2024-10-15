@@ -55,10 +55,15 @@ async def update_csv(data: list):
     '''
     Дополнение csv-файла
     '''
+    if len(data) != 8:
+        return
+    try:
+        async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
+            writer = csv.writer(file)
+            await writer.writerow(data)
+    except Exception as e:
+        logger.critical(f'Ошибка при записи файла, {e}')
 
-    async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8') as file: 
-        writer = csv.writer(file)
-        await writer.writerow(data)
 
 async def create():
     '''

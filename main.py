@@ -232,7 +232,7 @@ async def parse_page(link: str, session):
                 ready_config[1],
                 ready_config[2],
                 ready_config[4],
-                ready_config[5],
+                ready_config[5][-4:],
                 f'{brand_option}>{' '.join(name.split(',')[0].split(' ')[1:])}>{ready_config[0]}'
                 ]
 

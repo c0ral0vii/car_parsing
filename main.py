@@ -52,6 +52,7 @@ async def send():
     except Exception as e:
         logger.error(f'Ошибка при отправке {e}')
 
+
 async def update_csv(data: list):
     '''
     Дополнение csv-файла
@@ -72,7 +73,8 @@ async def create():
     Создание csv-файла
     '''
 
-    base_info = ['title',
+    base_info = [
+        'title',
         'guid',
         'URL',
         'price',
@@ -155,7 +157,7 @@ async def parse_link_cars(session, pages: list = []) -> list:
 
     if len(pages) == 0:
         logger.critical('Ошибка с получением страниц')
-        return
+        raise 'Ошибка с получением страниц перезапустите скрипт'
 
     all_links = []
 
@@ -169,7 +171,7 @@ async def parse_link_cars(session, pages: list = []) -> list:
             
             links = soup.find_all('a', class_='btn btn-outline-primary')
             for link in links:
-                all_links.append(f'{settings.BASE_URL}/{link.get('href')}')
+                all_links.append(f'{settings.BASE_URL}{link.get('href')}')
                 logger.info(f'Ссылка получена {settings.BASE_URL}{link.get('href')}')
         except Exception as e:
             logger.error(f'Возникла ошибка {e} при получении ссылок на машины')
@@ -225,7 +227,7 @@ async def parse_page(link: str, session):
                 id.split(' ')[-1],
                 link,
                 price,
-                ','.join([image_link.get('src').replace('impolicy=heightRate&rh=653&cw=1160&ch=653&cg=Center', '') for image_link in image_links]),
+                ','.join([image_link.get('src').replace('?impolicy=heightRate&rh=653&cw=1160&ch=653&cg=Center', '') for image_link in image_links]),
                 ready_config[0],
                 ready_config[1],
                 ready_config[2],
@@ -259,7 +261,8 @@ async def start(processes: int = 1):
     print('Смотрите файл логов debug.log')
 
     logger.info('Запуск программы')
-    logger.info(f'Запуск в {processes}')
+    logger.info(f'Запуск в {processes} процессов')
+
     try:
         os.mkdir('./output')
         logger.info('Папка output создана')
@@ -272,10 +275,10 @@ async def start(processes: int = 1):
         links_part = np.array_split(all_pages, processes)
         get_tasks = [parse_link_cars(session=session, pages=page_row) for page_row in links_part]
         logger.info('Получаем ссылки на машины')
-        all_cars = await asyncio.gather(*get_tasks)
+        all_cars = await asyncio.gather(get_tasks[-1])
 
     tasks = [main(pages=links) for links in all_cars]
-    await asyncio.gather(*tasks)
+    await asyncio.gather(tasks[-1])
     logger.info('Создали файл')
 
     logger.info('Парсинг закончился')

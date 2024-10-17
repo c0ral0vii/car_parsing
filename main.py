@@ -62,7 +62,6 @@ async def update_csv(data: list):
         if len(data) != 11:
             return
 
-        print(data[3])
         if len(str(data[3])) > 4:
             async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
                 writer = csv.writer(file)
@@ -277,7 +276,7 @@ async def start(processes: int = 1):
     async with aiohttp.ClientSession() as session:
         all_pages = await parse_counts(session=session)
         links_part = np.array_split(all_pages, processes)
-        get_tasks = [parse_link_cars(session=session, pages=page_row) for page_row in links_part]
+        get_tasks = [await parse_link_cars(session=session, pages=page_row) for page_row in links_part]
         logger.info('Получаем ссылки на машины')
         all_cars = await asyncio.gather(*get_tasks)
 

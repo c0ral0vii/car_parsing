@@ -61,9 +61,12 @@ async def update_csv(data: list):
     try:
         if len(data) != 11:
             return
-        async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
-            writer = csv.writer(file)
-            await writer.writerow(data)
+
+        print(data[3])
+        if len(str(data[3])) > 4:
+            async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
+                writer = csv.writer(file)
+                await writer.writerow(data)
     except Exception as e:
         logger.critical(f'Ошибка при записи файла, {e}')
 
@@ -206,7 +209,8 @@ async def parse_page(link: str, session):
         price_element = soup.find('span', itemprop='price')
 
         if price_element:
-            price = price_element.get_text(strip=True).encode('utf-8').decode('utf-8')
+            price_ = price_element.get_text(strip=True).encode('utf-8').decode('utf-8')
+            price = int(price_.replace('\xa0', '').replace(' ', ''))
         else:
             price = 'Отсутствует, только связь с менеджером'
 
@@ -275,10 +279,10 @@ async def start(processes: int = 1):
         links_part = np.array_split(all_pages, processes)
         get_tasks = [parse_link_cars(session=session, pages=page_row) for page_row in links_part]
         logger.info('Получаем ссылки на машины')
-        all_cars = await asyncio.gather(*get_tasks)
+        all_cars = await asyncio.gather(get_tasks[-1])
 
     tasks = [main(pages=links) for links in all_cars]
-    await asyncio.gather(*tasks)
+    await asyncio.gather(tasks[-1])
     logger.info('Создали файл')
 
     logger.info('Парсинг закончился')

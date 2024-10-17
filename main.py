@@ -62,10 +62,9 @@ async def update_csv(data: list):
         if len(data) != 11:
             return
 
-        if len(str(data[3])) > 4:
-            async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
-                writer = csv.writer(file)
-                await writer.writerow(data)
+        async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
+            writer = csv.writer(file)
+            await writer.writerow(data)
     except Exception as e:
         logger.critical(f'Ошибка при записи файла, {e}')
 
@@ -204,7 +203,7 @@ async def parse_page(link: str, session):
 
     try:
         name = soup.find('h1', class_='mb-5 mt-4').get_text()
-        id = soup.find('div', class_='text-secondary h5 negative-mt-4').get_text()
+        id = soup.find('div', class_='text-secondary h5 negative-mt-4').get_text(strip=True)
         price_element = soup.find('span', itemprop='price')
 
         if price_element:
@@ -230,7 +229,7 @@ async def parse_page(link: str, session):
                 id.split(' ')[-1],
                 link,
                 price,
-                ','.join([image_link.get('src').replace('?impolicy=heightRate&rh=653&cw=1160&ch=653&cg=Center', '') for image_link in image_links]),
+                ' | '.join([image_link.get('src').replace('?impolicy=heightRate&rh=653&cw=1160&ch=653&cg=Center', '') for image_link in image_links]),
                 ready_config[0],
                 ready_config[1],
                 ready_config[2],
@@ -276,7 +275,7 @@ async def start(processes: int = 1):
     async with aiohttp.ClientSession() as session:
         all_pages = await parse_counts(session=session)
         links_part = np.array_split(all_pages, processes)
-        get_tasks = [await parse_link_cars(session=session, pages=page_row) for page_row in links_part]
+        get_tasks = [parse_link_cars(session=session, pages=page_row) for page_row in links_part]
         logger.info('Получаем ссылки на машины')
         all_cars = await asyncio.gather(*get_tasks)
 

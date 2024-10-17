@@ -279,10 +279,10 @@ async def start(processes: int = 1):
         links_part = np.array_split(all_pages, processes)
         get_tasks = [parse_link_cars(session=session, pages=page_row) for page_row in links_part]
         logger.info('Получаем ссылки на машины')
-        all_cars = await asyncio.gather(get_tasks[-1])
+        all_cars = await asyncio.gather(*get_tasks)
 
     tasks = [main(pages=links) for links in all_cars]
-    await asyncio.gather(tasks[-1])
+    await asyncio.gather(*tasks)
     logger.info('Создали файл')
 
     logger.info('Парсинг закончился')

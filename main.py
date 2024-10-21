@@ -112,6 +112,7 @@ async def check_csv():
     with open('./output/parse.csv', 'w', encoding='ISO-8859-1', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(valid_rows)
+    os.remove('./output/before.csv')
     logger.info('Проверка прошла успешно')
 
 
@@ -291,6 +292,8 @@ async def start(processes: int = 1):
         os.mkdir('./output')
         logger.info('Папка output создана')
     except Exception as e:
+        os.remove('./output/parse.csv')
+        os.remove('./output/before.csv')
         logger.error('Папка уже существует')
 
     await create()

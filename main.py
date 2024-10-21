@@ -62,7 +62,7 @@ async def update_csv(data: list):
         if len(data) != 11:
             return
 
-        async with aiofiles.open('./output/parse.csv', 'a', encoding='utf-8', newline='') as file: 
+        async with aiofiles.open('./output/before.csv', 'a', encoding='utf-8', newline='') as file: 
             writer = csv.writer(file)
             await writer.writerow(data)
     except Exception as e:
@@ -87,11 +87,33 @@ async def create():
         'issue',
         'taxt'] # структура файла
 
-    async with aiofiles.open(f'./output/parse.csv', 'w', newline='', encoding='utf-8') as file:
+    async with aiofiles.open(f'./output/before.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         await writer.writerow(base_info)
     
-    logger.info('Файл parse.csv создан')
+    logger.info('Файл before.csv создан')
+
+async def check_csv():
+    '''
+    Проверка на разбитые строки у машин
+    '''
+    valid_rows = []
+
+    logger.info('Выполняется проверка на побитые строки')
+    with open('./output/before.csv', 'r', encoding='ISO-8859-1') as file:
+        reader = csv.reader(file, delimiter=',')
+        valid_rows = []
+        for row in reader:
+            if len(row) == 11 and row[0] not in ['/', 'jpg', 'кпп', '.jpg', '?']:
+                valid_rows.append(row)
+
+            
+        
+    with open('./output/parse.csv', 'w', encoding='ISO-8859-1', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(valid_rows)
+    logger.info('Проверка прошла успешно')
+
 
 async def get_all_cars(session, count: str = 1):
     '''
@@ -282,13 +304,12 @@ async def start(processes: int = 1):
     tasks = [main(pages=links) for links in all_cars]
     await asyncio.gather(*tasks)
     logger.info('Создали файл')
-
+    await check_csv()
     logger.info('Парсинг закончился')
 
     logger.info('Отправка файла')
     await send()
     logger.info('Отправлено')
-
 
 
 if __name__ == '__main__':
